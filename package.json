@@ -1,0 +1,20 @@
+{
+  "name": "graphql-js-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha spec.js"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "graphql": "^0.7.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "mocha": "^3.0.2",
+    "standard": "^8.0.0"
+  }
+}
