@@ -18,4 +18,4 @@ const schema = new GraphQLSchema({
   })
 })
 
-module.exports.execute = (query) => graphql(schema, query)
+module.exports.execute = (query, variables) => graphql(schema, query, null, null, variables)

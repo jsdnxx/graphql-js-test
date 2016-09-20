@@ -5,6 +5,12 @@ chai.use(require('chai-as-promised'))
 const { expect } = chai
 const schema = require('./index')
 
+function expectData ({data, errors}) {
+  expect(errors).to.not.exist
+  expect(data).to.be.an('object')
+  return data
+}
+
 describe('merging @skip and @include', () => {
   // behavior as defined in
   // https://github.com/facebook/graphql/blob/master/spec/Section%203%20--%20Type%20System.md#include
@@ -14,14 +20,23 @@ describe('merging @skip and @include', () => {
   let queryString
   beforeEach(() => {
     queryString = () => `
-      query {
-        hello @include(if: ${include}) @skip(if: ${skip})
+      query ($include: Boolean!, $skip: Boolean!) {
+        hello @include(if: ${include}) @skip(if: ${skip}),
+        withVariables: hello @include(if: $include) @skip(if: $skip)
       }
     `
   })
-  const result = () => schema.execute(queryString())
-  const assertIncluded = () => expect(result().then(({data}) => data)).to.eventually.have.property('hello')
-  const assertNotIncluded = () => expect(result().then(({data}) => data)).to.eventually.not.have.property('hello')
+  const variables = () => ({skip, include})
+  const result = () => schema.execute(queryString(), variables())
+  const assertIncluded = () => result().then(expectData).then(data => {
+    expect(data).to.have.property('hello')
+    expect(data).to.have.property('withVariables')
+  })
+
+  const assertNotIncluded = () => result().then(expectData).then(data => {
+    expect(data).not.to.have.property('hello')
+    expect(data).not.to.have.property('withVariables')
+  })
 
   describe('when @skip=false and @include=true', () => {
     it('is included', () => {
@@ -55,12 +70,14 @@ describe('merging @skip and @include', () => {
     describe('with @skip', () => {
       beforeEach(() => {
         queryString = () => `
-          query {
+          query ($skip: Boolean!) {
             hello,
+            withVariables: hello,
             ...F0
           }
           fragment F0 on RootQueryType {
-            hello @skip(if: ${skip})
+            hello @skip(if: ${skip}),
+            withVariables: hello @skip(if: $skip)
           }
         `
       })
@@ -82,12 +99,14 @@ describe('merging @skip and @include', () => {
   describe('when evaluating conflicting @skip and @include on query selection and fragment', () => {
     beforeEach(() => {
       queryString = () => `
-        query {
-          hello @include(if: ${include})
+        query ($include: Boolean!, $skip: Boolean!) {
+          hello @include(if: ${include}),
+          withVariables: hello @include(if: $include),
           ...F0
         }
         fragment F0 on RootQueryType {
-          hello @skip(if: ${skip})
+          hello @skip(if: ${skip}),
+          withVariables: hello @skip(if: $skip)
         }
       `
     })
