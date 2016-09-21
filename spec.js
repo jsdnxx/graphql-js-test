@@ -135,4 +135,34 @@ describe('merging @skip and @include', () => {
       })
     })
   })
+  describe('when handling multiple fields at the same level', () => {
+    describe('when at least one occurance would be included', () => {
+      beforeEach(() => {
+        skip = true, include = false
+        queryString = () => `
+        query ($include: Boolean!, $skip: Boolean!) {
+          hello,
+          hello @skip(if: true),
+          hello @include(if: false),
+          withVariables: hello,
+          withVariables: hello @skip(if: $skip),
+          withVariables: hello @include(if: $include)
+        }`
+      })
+      it('is included', () => assertIncluded())
+    })
+    describe('when at no occurance would be included', () => {
+      beforeEach(() => {
+        skip = true, include = false
+        queryString = () => `
+        query ($include: Boolean!, $skip: Boolean!){
+          hello @skip(if: true),
+          hello @include(if: false),
+          withVariables: hello @skip(if: $skip),
+          withVariables: hello @include(if: $include)
+        }`
+      })
+      it('is not included', () => assertNotIncluded())
+    })
+  })
 })
